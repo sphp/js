@@ -1,0 +1,47 @@
+<div class="cls"></div>
+<div class="cls"></div>
+<div class="cls"></div>
+<div class="cls"></div>
+<div class="cls"></div>
+<div class="cls"></div>
+<div class="cls"></div>
+<script>
+(function(){
+   "use strict";
+	var jap = function(){
+		function jap(s, d){
+			if (!s) return;
+			if (s instanceof jap) return s;
+			var elm = s;
+			if (typeof s === 'string'){
+			if(s.indexOf(" ")>-1) elm = document.querySelectorAll(s);
+			else{
+				s =s.match(/^(\W)?(.*)/);
+				elm = (d||document)["getElement"+(s[1]?s[1]=="#"?"ById":"sByClassName":"sByTagName")](s[2]);
+			}
+			}else if (typeof s === 'function') {
+				return this.ready(s);
+			}
+			if (elm.nodeType || elm === window) elm = [elm];
+			this.length = elm.length;
+			for (var i = 0, l = this.length; i < l; i++) this[i] = elm[i];
+		}
+		jap.prototype.init = function(s, d) {
+			return new jap(s, d);
+		};
+		return jap;
+	}();
+	
+	jap.prototype.each = function(cb){
+		for (var i = 0, ln = this.length; i < ln; i++){
+			if (cb.call(this[i], i, this[i]) === false) break;
+		}
+		return this;
+	};
+	window['$'] = jap.prototype.init;
+})();
+$('div').each(function() {
+   $('body')[0].innerHTML += this.nodeName + "<br>";
+});
+$('body')[0].innerHTML += $('div').length + " ";
+</script>
