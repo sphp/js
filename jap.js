@@ -1,7 +1,8 @@
 (function(){
-	var Jap = function(){
+	var  w=window,d=document,
+	Jap = function(){
 		function Jap(a,b){
-			var elms = (b||document)["querySelectorAll"](a);
+			var elms = (b||d)["querySelectorAll"](a);
 			this.length = elms.length;
 			for (let i=0, l = elms.length; i < l; i++) this[i] = elms[i];
 		}
@@ -10,8 +11,9 @@
 		};
 		return Jap;
 	}();
-	window.each = function(arr,cb){
-		for (var i = 0, ln = arr.length; i < ln; i++) if (cb.call(arr[i], i, arr[i]) === false) break;
+	w.$id=function(a,b){return (b||d)["getElementById"](a)};
+	w.each = function(arr,cb){
+		for (let i = 0, ln = arr.length; i < ln; i++) if (cb.call(arr[i], i, arr[i]) === false) break;
 	};
 	plug = Jap.prototype;
 	plug.each = function(cb){each(this,cb);return this;};
@@ -26,5 +28,5 @@
 			return el.addEventListener(e,cb);
 		});
 	};
-	window.$ = plug.init;
+	w.$ = plug.init;
 })();
