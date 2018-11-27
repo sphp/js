@@ -1,5 +1,5 @@
 (function(){
-            var Jap = function(){
+	var Jap = function(){
 		function Jap(a,b){
 			var elms = (b||document)["querySelectorAll"](a);
 			this.length = elms.length;
