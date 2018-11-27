@@ -25,9 +25,8 @@
 <div class="dropBox">cls3</div>
 <script>
 (function(){
-	var  w=window,d=document;
-	w.$id=function(a,b){return (b||d)["getElementById"](a)};
-	var Jap = function(){
+	var  w=window,d=document,
+	Jap = function(){
 		function Jap(a,b){
 			var elms = (b||d)["querySelectorAll"](a);
 			this.length = elms.length;
@@ -38,6 +37,7 @@
 		};
 		return Jap;
 	}();
+	w.$id=function(a,b){return (b||d)["getElementById"](a)};
 	w.each = function(arr,cb){
 		for (let i = 0, ln = arr.length; i < ln; i++) if (cb.call(arr[i], i, arr[i]) === false) break;
 	};
