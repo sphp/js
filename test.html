@@ -1,47 +1,74 @@
-<div class="cls"></div>
-<div class="cls"></div>
-<div class="cls"></div>
-<div class="cls"></div>
-<div class="cls"></div>
-<div class="cls"></div>
-<div class="cls"></div>
+<body>
+<style type="text/css">
+	div{
+		float:left;
+		margin-right:10px;
+	}
+	.drag,.dropBox{
+		border:1px solid;
+	}
+	.drag{
+		width: 50px;
+		height: 50px;
+	}
+	.dropBox{
+		min-width: 100px;
+		height: 100px;
+	}
+</style>
+
+<div id="b1" class="drag">cls1</div>
+<div id="b2" class="drag">cls1</div>
+<div id="b3" class="drag">cls1</div>
+<div id="b4" class="drag">cls1</div>
+<div class="dropBox">cls2</div>
+<div class="dropBox">cls3</div>
 <script>
 (function(){
-   "use strict";
-	var jap = function(){
-		function jap(s, d){
-			if (!s) return;
-			if (s instanceof jap) return s;
-			var elm = s;
-			if (typeof s === 'string'){
-			if(s.indexOf(" ")>-1) elm = document.querySelectorAll(s);
-			else{
-				s =s.match(/^(\W)?(.*)/);
-				elm = (d||document)["getElement"+(s[1]?s[1]=="#"?"ById":"sByClassName":"sByTagName")](s[2]);
-			}
-			}else if (typeof s === 'function') {
-				return this.ready(s);
-			}
-			if (elm.nodeType || elm === window) elm = [elm];
-			this.length = elm.length;
-			for (var i = 0, l = this.length; i < l; i++) this[i] = elm[i];
+	var  w=window,d=document;
+	w.$id=function(a,b){return (b||d)["getElementById"](a)};
+	var Jap = function(){
+		function Jap(a,b){
+			var elms = (b||d)["querySelectorAll"](a);
+			this.length = elms.length;
+			for (let i=0, l = elms.length; i < l; i++) this[i] = elms[i];
 		}
-		jap.prototype.init = function(s, d) {
-			return new jap(s, d);
+		Jap.prototype.init = function(a,b){
+			return new Jap(a,b);
 		};
-		return jap;
+		return Jap;
 	}();
-	
-	jap.prototype.each = function(cb){
-		for (var i = 0, ln = this.length; i < ln; i++){
-			if (cb.call(this[i], i, this[i]) === false) break;
-		}
+	w.each = function(arr,cb){
+		for (let i = 0, ln = arr.length; i < ln; i++) if (cb.call(arr[i], i, arr[i]) === false) break;
+	};
+	plug = Jap.prototype;
+	plug.each = function(cb){each(this,cb);return this;};
+	plug.attr = function(a,v){
+		return v===void 0 ? this[0].getAttribute(a) : this.each(function(i, el){
+			v ? el.setAttribute(a,v) : el.removeAttribute(a);
+		});
 		return this;
 	};
-	window['$'] = jap.prototype.init;
+	plug.on = function(e,cb){
+		this.each(function(i,el){
+			return el.addEventListener(e,cb);
+		});
+	};
+	w.$ = plug.init;
 })();
-$('div').each(function() {
-   $('body')[0].innerHTML += this.nodeName + "<br>";
+
+$("div").attr('draggable',true);
+$("div").on('dragstart', function(e){
+	if(e.target.id) e.dataTransfer.setData("Text", e.target.id);
 });
-$('body')[0].innerHTML += $('div').length + " ";
+$("div").on('dragover', function(e){
+    e.preventDefault();
+});
+$("div").on('drop', function(e){
+    e.preventDefault();
+    if ( e.target.className == "dropBox" ){
+        var data = e.dataTransfer.getData("Text");
+        if(data) e.target.appendChild($id(data));
+    }
+});
 </script>
