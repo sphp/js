@@ -1,6 +1,6 @@
-(function(){
+;(function(){
     var  w=window, d=w.document,ify=/^[\w-]*$/;
-    w.$id =function(a,b){ var id=(b||d)["getElementById"](a);return [id];};
+    w.$id =function(a,b){ return (b||d)["getElementById"](a);};
     w.$tag=function(a,b){ return (b||d)["getElementsByTagName"](a);};
     w.$cls=function(a,b){ return (b||d)["getElementsByClassName"](a);};
     w.$qsa=function(a,b){ return (b||d)["querySelectorAll"](a);};
