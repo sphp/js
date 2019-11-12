@@ -20,18 +20,32 @@ function parse(a,t){return new DOMParser().parseFromString(a,t===void 0?'text/ht
 function selid(a,b){return (b||d)['getElementselid'](a)}
 function nlist(n){return NodeList.prototype.isPrototypeOf(n)}
 function selall(a,b){return (b||d)['querySelectorAll'](a)}
-function select(a,b){if(ishtml(a))a=toelm(a); return iselm(a)?a:(b||d)['querySelector'](a)}
-function nocash(url){return url+(url.indexOf('?')>0?'&v=':'?v=')+new Date().getTime()}
-function loop(a,fn){a=isstr(a)?selall(a):(nlist(a)?a:[a]);for(let i=0;i<a.length;i++)fn(a[i],i)}
-function each(a,fn,v){a=isstr(a)?selall(a):(nlist(a)?a:[a]);for(let i=0;i<a.length;i++)a[i][fn]=v}
-function insert(a,b,p){/*beforebegin,afterbegin,beforeend,afterend*/loop(b, function(e){(e)['insertAdjacentHTML'](p||'beforeend',a)})}
-function append(a,b){(iselm(b)?b:select(b))['appendChild'](iselm(a)?a: select(a))}
+/**
+ * t		string		any html tag name
+ * at		object 		html tag attributes
+ * ht		string		html string
+ * @return	object 		html dom element
+ */
 function elm(t,at,ht){
 	var e=d.createElement(t);
 	if(isobj(at))for(let k in at)e.setAttribute(k,at[k]);
 	e.innerHTML=ht||at; return e;
 }
 function html2elm(a){return elm('div',a).firstChild}
+function select(a,b){if(ishtml(a))a=html2elm(a); return iselm(a)?a:(b||d)['querySelector'](a)}
+function nocash(url){return url+(url.indexOf('?')>0?'&v=':'?v=')+new Date().getTime()}
+function loop(a,fn){a=isstr(a)?selall(a):(nlist(a)?a:[a]);for(let i=0;i<a.length;i++)fn(a[i],i)}
+function each(a,fn,v){a=isstr(a)?selall(a):(nlist(a)?a:[a]);for(let i=0;i<a.length;i++)a[i][fn]=v}
+function insert(a,b,p){/*beforebegin,afterbegin,beforeend,afterend*/loop(b, function(e){(e)['insertAdjacentHTML'](p||'beforeend',a)})}
+function append(a,b){(iselm(b)?b:select(b))['appendChild'](iselm(a)?a: select(a))}
+
+/**
+ * url		string		target url
+ * fn		function 	callback function
+ * d		string		Send data string
+ * m		string		Http Request Method Name
+ * @return	string 		mixed data as string
+ */
 function ajax(url,fn,d,m){
 	var xh=new XMLHttpRequest();
 	xh.open((m||(d?'POST':'GET')),url,true);
@@ -86,22 +100,42 @@ function storage(name, value){
 	else if(value=='remove')localStorage.removeItem(name);
 	else localStorage.setItem(name, value);
 }
-function pagination(totalPage, thisPage){
-	var _url = url.replace(/&page=\d+/g,''),first,last;
+/**
+ * listlen	string		any html tag name
+ * page		Integer		current page number 
+ * limit	Integer		limit for each page
+ * sbtn		string		html string
+ * @return	object 		html dom element
+ */
+function paging(listlen, page, limit, sbtn){
+	page = page!==void 0?Number(page):(isset(prm.page)?Number(prm.page):1);
+	limit= limit!==void 0?Number(limit):(isset(prm.limit)?Number(prm.limit):30);
+	sbtn = sbtn!==void 0?Number(sbtn):3;
+	
+	var btns='', _url = url.replace(/&page=\d+/g,''), first, last, start, end, totpag, totbtn, offset, i;
 	if(_url.substr(_url.length-1)=='&') _url = _url.slice(0, -1);
-	thisPage = Number(thisPage);
-	html = '';
-	for (var i = 1; i <= totalPage; i++){
-		let start = thisPage-3, end = thisPage+3;
-		if(thisPage < 4 ) end += 4 - thisPage;
-		if(thisPage > totalPage-4 ) start = start-(3-(totalPage-thisPage));
-		if( i >= start && i <= end){
-			first = (thisPage>4 && totalPage>7) ? '<a href="'+_url+'&page='+1+'">first</a>' : '';
-			html += '<a href="'+_url+'&page='+i+'"'+ (i==thisPage? ' class="active"' : '') +'>'+i+'</a>';
-			last = (i==totalPage) ? '' : '<a href="'+_url+'&page='+totalPage+'">last</a>';
-		}
-	}
-	return '<div class="row paging">'+first+html+last+'</div>';
+
+   if(listlen>limit){
+      offset = (page*limit)-limit; 
+      totbtn = (sbtn*2)+1; 
+      totpag = Math.ceil(listlen/limit);
+      for(i=1;i<=totpag;i++){
+         start = page>=totpag-sbtn ? totpag-totbtn : page-sbtn;
+         end   = page<=sbtn?totbtn:page+sbtn;
+         if( i >= start && i <= end){
+            first = (page>=sbtn && totpag>totbtn) ? '<a href="'+_url+'&page='+1+'">first</a>':'';
+            btns += '<a href="'+_url+'&page='+i+'"'+ (i==page? ' class="active"' : '') +'>'+i+'</a>';
+            last = (page<totpag-sbtn)?'<a href="'+_url+'&page='+totpag+'">last</a>':'';
+         }
+      }
+      /*
+      if(totpag>=page) list = list.slice(offset, page<totpag ? offset+limit : list.length);
+      */
+      if(totpag>page) list = offset+' to '+(offset+limit);
+      else if(totpag==page) list = offset+' '+listlen;
+      else list = 'nill';
+      return list+'<div class="row paging">'+first+btns+last+'</div>';
+   }
 }
 function downloadFile(url) {
 	var req = new XMLHttpRequest();
@@ -117,38 +151,7 @@ function downloadFile(url) {
 	};
 	req.send();
 }
-function paging(listlen, page, maxl, sbtn){
-	page= page!==void 0?Number(page):(isset(prm.page)?Number(prm.page):1);
-	maxl= maxl!==void 0?Number(maxl):(isset(prm.limit)?Number(prm.limit):30);
-	sbtn= sbtn!==void 0?Number(sbtn):4;
-	
-	var btns='', _url = url.replace(/&page=\d+/g,''), first, last, start, end, totpag, totbtn, offset, i;
-	if(_url.substr(_url.length-1)=='&') _url = _url.slice(0, -1);
+//Example: loop('script[src]',function(e){e.src = nocash(e.src )}); /*nocash for External JS*/
+//Example: loop('link[href]',function(e){e.href = nocash(e.href )}); /*nocash for External CSS*/
+//Example:  
 
-   if(listlen>maxl){
-      offset = (page*maxl)-maxl; 
-      totbtn = (sbtn*2)+1; 
-      totpag = Math.ceil(listlen/maxl);
-      for(i=1;i<=totpag;i++){
-         start = page>=totpag-sbtn ? totpag-totbtn : page-sbtn;
-         end   = page<=sbtn?totbtn:page+sbtn;
-         if( i >= start && i <= end){
-            first = (page>=sbtn && totpag>totbtn) ? '<a href="'+_url+'&page='+1+'">first</a>':'';
-            btns += '<a href="'+_url+'&page='+i+'"'+ (i==page? ' class="active"' : '') +'>'+i+'</a>';
-            last = (page<totpag-sbtn)?'<a href="'+_url+'&page='+totpag+'">last</a>':'';
-         }
-      }
-      /*
-      if(totpag>=page) list = list.slice(offset, page<totpag ? offset+maxl : list.length);
-      if(totpag>page) list = list.slice(offset, offset+maxl);else if(totpag==page) list = list.slice(offset, list.length);else list = [];
-      */
-      if(totpag>page) list = offset+' to '+(offset+maxl);
-      else if(totpag==page) list = offset+' '+listlen;
-      else list = 'nill';
-      return list+'<div class="row paging">'+first+btns+last+'</div>';
-   }
-}
-var
-clist={ad :'Andorra',ae :'United Arab Emirates',af :'Afghanistan',al :'Albania',am :'Armenia',ao :'Angola',ar :'Argentina',at :'Austria',au :'Australia',aw :'Aruba',az :'Azerbaijan',ba :'Bosnia And Herzegovina',bb :'Barbados',bd :'Bangladesh',be :'Belgium',bf :'Burkina Faso',bg :'Bulgaria',bh :'Bahrain',bn :'Brunei Darussalam',bo :'Bolivia',br :'Brazil',bs :'Bahamas',by :'Belarus',ca :'Canada',cd :'Congo, Republic',cg :'Congo',ch :'Switzerland',ci :'Cote D\'ivoire',cl :'Chile',cm :'Cameroon',cn :'China',co :'Colombia',cr :'Costa Rica',cu :'Cuba',cv :'Cabo Verde',cw :'Curacao',cy :'Cyprus',cz :'Czech Republic',de :'Germany',dk :'Denmark',do :'Dominican Republic',dz :'Algeria',ec :'Ecuador',ee :'Estonia',eg :'Egypt',eh :'Western Sahara',es :'Spain',et :'Ethiopia',fi :'Finland',fj :'Fiji',fo :'Faroe Islands',fr :'France',gd :'Grenada',ge :'Georgia',gh :'Ghana',gi :'Gibraltar',gm :'Gambia',gn :'Guinea',gp :'Guadeloupe',gq :'Equatorial Guinea',gr :'Greece',gt :'Guatemala',gu :'Guam',gy :'Guyana',hk :'Hong Kong',hn :'Honduras',hr :'Croatia',ht :'Haiti',hu :'Hungary',id :'Indonesia',ie :'Ireland',il :'Israel',in :'India',int :'International',iq :'Iraq',ir :'Iran',is :'Iceland',it :'Italy',jm :'Jamaica',jo :'Hashemite Kingdom Of Jordan',jp :'Japan',ke :'Kenya',kg :'Kyrgyzstan',kh :'Cambodia',kn :'Saint Kitts And Nevis',kp :'Korea, Republic',kr :'Korea (south)',kw :'Kuwait',kz :'Kazakhstan',la :'Lao People\'s',lb :'Lebanon',li :'Liechtenstein',lk :'Sri Lanka',lt :'Lithuania',lu :'Luxembourg',lv :'Latvia',ly :'Libya',ma :'Morocco',mc :'Monaco',md :'Moldova',me :'Montenegro',mg :'Madagascar',mk :'Macedonia',mm :'Myanmar',mn :'Mongolia',mo :'Macao',mt :'Malta',mv :'Maldives',mx :'Mexico',my :'Malaysia',mz :'Mozambique',ne :'Niger',ng :'Nigeria',ni :'Nicaragua',nl :'Netherlands',no :'Norway',np :'Nepal',nz :'New Zealand',om :'Oman',pa :'Panama',pe :'Peru',ph :'Philippines',pk :'Pakistan',pl :'Poland',pr :'Puerto Rico',ps :'Palestine',pt :'Portugal',py :'Paraguay',qa :'Qatar',ro :'Romania',rs :'Serbia',ru :'Russia',rw :'Rwanda',sa :'Saudi Arabia',sd :'Sudan',se :'Sweden',sg :'Singapore',si :'Slovenia',sk :'Slovakia',sl :'Sierra Leone',sm :'San Marino',sn :'Senegal',so :'Somalia',sr :'Suriname',sv :'El Salvador',sx :'Sint Maarten',sy :'Syrian Arab Republic',tg :'Togo',th :'Thailand',tj :'Tajikistan',tm :'Turkmenistan',tn :'Tunisia',tr :'Turkey',tt :'Trinidad And Tobago',tw :'Taiwan',tz :'Tanzania',ua :'Ukraine',ug :'Uganda',uk :'United Kingdom',us :'United States',uy :'Uruguay',uz :'Uzbekistan',ve :'Venezuela',vi :'Virgin Islands',vn :'Viet Nam',xk :'xk',ye :'Yemen',za :'South Africa',zw :'Zimbabwe',unsorted :'Unsorted'},
-group=['auto','business','classic','comedy','documentary','education','entertainment','family','fashion','food','general','health','history','hobby','kids','legislative','lifestyle','local','movies','music','news','quiz','religious','sci-fi','shop','sport','travel','weather','other'];
-loop('script[src]',function(e){e.src =nocash(e.src )});/*Force load External JS*/
