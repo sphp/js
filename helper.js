@@ -137,20 +137,6 @@ function paging(listlen, page, limit, sbtn){
       return list+'<div class="row paging">'+first+btns+last+'</div>';
    }
 }
-function downloadFile(url) {
-	var req = new XMLHttpRequest();
-	req.open("GET", url, true);
-	req.responseType = "blob";
-	req.onload = function (event) {
-		var blob = req.response;
-		var fileName = req.getResponseHeader("fileName") //if you have the fileName header available
-		var link=document.createElement('a');
-		link.href=window.URL.createObjectURL(blob);
-		link.download=fileName;
-		link.click();
-	};
-	req.send();
-}
 //Example: loop('script[src]',function(e){e.src = nocash(e.src )}); /*nocash for External JS*/
 //Example: loop('link[href]',function(e){e.href = nocash(e.href )}); /*nocash for External CSS*/
 //Example:  
