@@ -4,6 +4,7 @@ baseURL=w.location.protocol+'//'+w.location.host+w.location.pathname;
 w.location.search.replace(/[?&]+([^=&]+)=([^&]*)/gi, function(m,k,v){prm[k]=v});
 
 function byid(a,b){return (b||d)['getElementById'](a)};
+function isset(a){return typeof a !== 'undefined'}
 function isobj(a){return a && typeof a==='object' && a.constructor===Object}
 function iselm(a){return a instanceof Element||a instanceof HTMLDocument}
 function ishtml(a){return /<[a-z/][\s\S]*>/i.test(a)}
