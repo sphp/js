@@ -5,7 +5,7 @@ var i,prm={},w=window,d=document,wiw=w.innerWidth,wih=w.innerHeight,
 url=w.location.href, baseURL=w.location.protocol+'//'+w.location.host+w.location.pathname;
 function encode(a){return encodeURIComponent(a)}
 function decode(a){return decodeURIComponent(a)}
-function obj2str(o){return JSON.stringify(o)}
+function strobj(o){return JSON.stringify(o)}
 function inarr(a,v){return a.indexOf(v)>=0}
 function isarr(a){return Array.isArray(a)}
 function isset(a){return typeof a !== 'undefined'}
