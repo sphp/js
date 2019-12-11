@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>test js element object</title>
+</head>
+<body>
+<div id="content"><input id="test" value="" type="text" /></div>
+
+<script type="text/javascript">
+var Dom = function(sel){
+	this.sel = sel || null;
+	this.elm = null;
+	switch (this.sel[0]){
+		case '<':
+			var matches = this.sel.match(/<([\w-]*)>/);
+			if (matches === null || matches === undefined) {
+				throw 'Invalid Selector / Node';
+				return false;
+			}
+			var tag = matches[0].replace('<', '').replace('>', '');
+			this.elm = document.createElement(tag);
+			break;
+		default: this.elm = document.querySelector(this.sel);
+	}
+}, dom = Dom.prototype;
+
+dom.on = function(ev, fn){
+	var evt = this.evh.bindEv(ev, fn, this.elm);
+}
+dom.off = function(ev){
+	var evt = this.evh.unbindEv(ev, this.elm);
+}
+dom.val = function(v){
+	return (v !== undefined ? this.elm.value=v : this.elm.value);
+};
+dom.append = function(html){
+	this.elm.innerHTML = this.elm.innerHTML + html;
+};
+dom.prepend = function(html){
+	this.elm.innerHTML = html + this.elm.innerHTML;
+};
+dom.html = function(html){
+	if(html===void 0)return this.elm.innerHTML;
+	this.elm.innerHTML = html;
+};
+dom.evh = {
+	evs: [],
+	bindEv: function(ev, fn, te) {
+		this.unbindEv(ev, te);
+		te.addEventListener(ev, fn, false);
+		this.evs.push({
+			type: ev,
+			ev: fn,
+			target: te
+		});
+	},
+	findEv: function(ev){
+		return this.evs.filter(function(evt) {
+			return (evt.type === ev);
+		}, ev)[0];
+	},
+	unbindEv: function(ev, te) {
+		var foundev = this.findEv(ev);
+		if (foundev !== undefined) {
+			te.removeEventListener(ev, foundev.ev, false);
+		}
+		this.evs = this.evs.filter(function(evt){
+			return (evt.type !== ev);
+		}, ev);
+	}
+};
+S=function(sel,doc){return new Dom(sel,doc)}
+
+console.log(S('title'));
+
+var a = S('<div>');
+
+document.getElementById('content').appendChild(a.elm);
+
+a.html('This div was created with the selector and this content was added with .html()');
+
+S('#content').append('The value of #test is' + S('#test').val() + ' change the value to see thee bound event.');
+
+S('#content').prepend('<p>Im prepended</p>');
+
+S('#content').append('<p>Im appended</p>');
+
+S('#test').on('change', function(){ alert("The value of #test changed"); })
+</script>
+</body>
+</html>
