@@ -4,45 +4,48 @@
 <title>test js element object</title>
 </head>
 <body>
-<div id="content"><input id="test" value="" type="text" /></div>
+<div id="content1"><input id="test1" value="" type="text" /></div>
+<div id="content2"><input id="test2" value="" type="text" /></div>
+<div id="content3"><input id="test3" value="" type="text" /></div>
 
 <script type="text/javascript">
-var Dom = function(sel){
+function log(v){console.log(v)}
+function len(v){return isarr(v)?v.length:Object.keys(v).length}
+function isElm(e){return e instanceof Element||e instanceof HTMLDocument}
+function each(ar,fn){for(var i=0,l=ar.length;i<l;i++)if(fn.call(i, ar[i])===false)break}
+var Dom = function(sel,doc){
 	this.sel = sel || null;
-	this.elm = null;
+	var els = null;
 	switch (this.sel[0]){
+		case '#': els = (doc||document)["getElementById"](this.sel); break;
+		case '.': els = (doc||document)["getElementsByClassName"](this.sel); break;
 		case '<':
-			var matches = this.sel.match(/<([\w-]*)>/);
-			if (matches === null || matches === undefined) {
+			var mch = this.sel.match(/<([\w-]*)>/);
+			if (mch === null || mch === undefined){
 				throw 'Invalid Selector / Node';
 				return false;
 			}
-			var tag = matches[0].replace('<', '').replace('>', '');
-			this.elm = document.createElement(tag);
+			var tag = mch[0].replace('<', '').replace('>', '');
+			els = document.createElement(tag);
 			break;
-		default: this.elm = document.querySelector(this.sel);
+		default: els = (doc||document)["querySelectorAll"](this.sel);
 	}
+	if(els.nodeType || isElm(els) || els === window) els = [els];
+    this.length = els.length;
+    for (var i=0, l = els.length; i < l; i++) this[i] = els[i];
 }, dom = Dom.prototype;
 
-dom.on = function(ev, fn){
-	var evt = this.evh.bindEv(ev, fn, this.elm);
-}
-dom.off = function(ev){
-	var evt = this.evh.unbindEv(ev, this.elm);
-}
-dom.val = function(v){
-	return (v !== undefined ? this.elm.value=v : this.elm.value);
-};
-dom.append = function(html){
-	this.elm.innerHTML = this.elm.innerHTML + html;
-};
-dom.prepend = function(html){
-	this.elm.innerHTML = html + this.elm.innerHTML;
-};
+dom.each = function(fn){each(this,fn);return this}
+dom.on = function(ev, fn){var evt = this.evh.bindEv(ev, fn, this)}
+dom.off = function(ev){var evt = this.evh.unbindEv(ev, this)}
+dom.val = function(v){return (v!==undefined?this.value=v:this.value)}
+dom.append = function(html){this.innerHTML = this.innerHTML + html}
+dom.prepend = function(html){this.innerHTML = html + this.innerHTML}
 dom.html = function(html){
-	if(html===void 0)return this.elm.innerHTML;
-	this.elm.innerHTML = html;
-};
+	return html===void 0? this[0].innerHTML : this.each(function(el){log(el)
+		el.innerHTML=html
+	})
+}
 dom.evh = {
 	evs: [],
 	bindEv: function(ev, fn, te) {
@@ -60,9 +63,10 @@ dom.evh = {
 		}, ev)[0];
 	},
 	unbindEv: function(ev, te) {
-		var foundev = this.findEv(ev);
-		if (foundev !== undefined) {
-			te.removeEventListener(ev, foundev.ev, false);
+		var evn = this.findEv(ev);
+		if (evn !== undefined) {
+
+			te.removeEventListener(ev, evn.ev, false);
 		}
 		this.evs = this.evs.filter(function(evt){
 			return (evt.type !== ev);
@@ -71,21 +75,17 @@ dom.evh = {
 };
 S=function(sel,doc){return new Dom(sel,doc)}
 
-console.log(S('title'));
+log(S('div'));
 
-var a = S('<div>');
+S('div').html('shamim');
 
-document.getElementById('content').appendChild(a.elm);
-
+/*
+document.getElementById('content').appendChild(a.els);
 a.html('This div was created with the selector and this content was added with .html()');
-
 S('#content').append('The value of #test is' + S('#test').val() + ' change the value to see thee bound event.');
-
 S('#content').prepend('<p>Im prepended</p>');
-
 S('#content').append('<p>Im appended</p>');
-
-S('#test').on('change', function(){ alert("The value of #test changed"); })
+S('#test').on('change', function(){ alert("The value of #test changed"); })*/
 </script>
 </body>
 </html>
