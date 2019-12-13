@@ -7,79 +7,142 @@
 <div id="content1"><input id="test1" value="" type="text" /></div>
 <div id="content2"><input id="test2" value="" type="text" /></div>
 <div id="content3"><input id="test3" value="" type="text" /></div>
+<p>This is a paragraph.</p>
+<p>This is another paragraph.</p>
+<ol>
+  <li>List item 1</li>
+  <li>List item 2</li>
+  <li>List item 3</li>
+</ol>
+<button id="btn1">Append text</button>
+<button id="btn2">Append list item</button>
 
 <script type="text/javascript">
 function log(v){console.log(v)}
-function len(v){return isarr(v)?v.length:Object.keys(v).length}
-function isElm(e){return e instanceof Element||e instanceof HTMLDocument}
-function each(ar,fn){for(var i=0,l=ar.length;i<l;i++)if(fn.call(i, ar[i])===false)break}
+function len(arr){return Array.isArray(arr) ? arr.length : Object.keys(arr).length}
+function isSet(v){return typeof v !== 'undefined'}
+function isArr(arr){return arr && Array.isArray(arr)}
+function isStr(str){return str && typeof(str)==='string'||str instanceof String}
+function isObj(obj){return obj && typeof obj==='object' && obj.constructor===Object}
+function isElm(elm){return elm instanceof Element||elm instanceof HTMLDocument}
+function isList(elm){return NodeList.prototype.isPrototypeOf(elm)}
+function isHtml(str){return /<[a-z/][\s\S]*>/i.test(str)}
+function arr2obj(arr){let n, obj={}; for(n in arr){ let p = arr[n].split('='); obj[p[0]] = p[1] } return obj}
+function toElm(htm){let elm = document.createElement('div'); elm.innerHTML=htm; return elm.firstChild}
+
+function byId  (sel, doc){return  isElm(sel) ? sel : (doc||document)['getElementById'](sel)}
+function selAll(sel, doc){return isList(sel) ? sel : (doc||document)['querySelectorAll'](sel)}
+function selOne(sel, doc){return  isElm(sel) ? sel : (doc||document)['querySelector'](sel)}
+
+/*pos=beforebegin/afterbegin/beforeend/afterend*/
+function insert(el, doc, pos){el.insertAdjacentHTML(pos||'beforeend',doc)}
+function append(el, doc){isElm(doc)?el.appendChild(doc):el.innerHTML=el.innerHTML+doc}
+function on(el, ev, fn){el.addEventListener?el.addEventListener(ev,fn,false):el.attachEvent?el.attachEvent("on"+ev,fn):el["on"+ev]=fn}
+function off(el, ev, fn){
+	el.removeEventListener?el.removeEventListener(ev,fn,false):el.detachEvent?el.detachEvent("on"+ev,fn):el["on"+ev]=null;
+}
+function each(arr, fn){for(var i=0,l=arr.length; i<l; i++) if(fn.call(i, arr[i])===false)break}
+function tag(tag, att, htm){
+	let elm=document.createElement(tag);
+	att=isArr(att) ? arr2obj(att) : att;
+	if(!isStr(att)) for(let key in att) elm.setAttribute(key, att[key]);
+	else if(htm==void 0) htm = att;
+	if(isSet(htm)) isStr(htm) ? elm.innerHTML=htm:elm.appendChild(htm);
+	return elm;
+}
+function attr(els, att, val){
+	if(val==void 0) return els[0].getAttribute(att);
+	each(els, function(el){
+		val ? el.setAttribute(att,val) : el.removeAttribute(att)
+	});
+}
+function ajax(u,fn,d,m){
+	var xh=new XMLHttpRequest();
+	xh.open((m||(d?'POST':'GET')),u,true);
+	xh.setRequestHeader('Content-Type','application/x-www-form-urlencoded;charset=UTF-8');
+	xh.onreadystatechange=function(){if(this.readyState==4&&this.status==200)fn(this.responseText)};
+	xh.send(d);
+}
+function store(n, v){
+   if(n=='clear') localStorage.clear();
+   else if(v === void 0) return localStorage.getItem(n);
+   else if(v === 'remove') localStorage.removeItem(n);
+   else localStorage.setItem(n, v);
+}
+function filter(val, elms, start){
+   eloop(elms, function(elm){
+      let txtval = elm.textContent || elm.innerText;
+      if(txtval){
+         if(start||true) elm.style.display=txtval.toLowerCase().startsWith(val.toLowerCase())?'':'none';
+         else elm.style.display=txtval.toLowerCase().indexOf(val.toLowerCase())>-1?'':'none';
+      }
+   })
+}
+function addClass(el, name){
+    if(el.classList) el.classList.add(name);
+    else{let a=el.className.split(' '),p=a.indexOf(name); if(p<0) el.className=a.push(name).join(' ')}
+}
+function removeClass(el, name){
+    if(el.classList) el.classList.remove(name);
+    else{let a=el.className.split(' '),p=a.indexOf(name); if(p>-1)el.className=a.splice(p,1).join(' ')}
+}
+function toggleClass(el, name){
+    if(el.classList) el.classList.toggle(name);
+    else{let a=el.className.split(' '),p=a.indexOf(name); el.className=(p<0? a.push(name) : a.splice(p,1)).join(' ')}
+}
+function eclone(e,p){return p>=0?e[p].cloneNode(true):e[e.length+p].cloneNode(true)}
+function uri(u){let a=document.createElement('a'); a.href=u||location.href;a.param = arr2obj(a.search.substr(1).split('&'));return a}
+function obj2url(obj){let k,str='';for(k in obj)str += k+'='+obj[k]+'&'; return str.slice(0,-1)}
+
+/*****	Super Dyanmic Dom Element Object	*****/
 var Dom = function(sel,doc){
-	this.sel = sel || null;
-	var els = null;
-	switch (this.sel[0]){
-		case '#': els = (doc||document)["getElementById"](this.sel); break;
-		case '.': els = (doc||document)["getElementsByClassName"](this.sel); break;
-		case '<':
-			var mch = this.sel.match(/<([\w-]*)>/);
-			if (mch === null || mch === undefined){
-				throw 'Invalid Selector / Node';
-				return false;
-			}
-			var tag = mch[0].replace('<', '').replace('>', '');
-			els = document.createElement(tag);
-			break;
-		default: els = (doc||document)["querySelectorAll"](this.sel);
-	}
+	this.sel = sel||document;
+	var els=isElm(this.sel)?this.sel:(doc||document)["querySelectorAll"](this.sel);
 	if(els.nodeType || isElm(els) || els === window) els = [els];
     this.length = els.length;
     for (var i=0, l = els.length; i < l; i++) this[i] = els[i];
-}, dom = Dom.prototype;
-
-dom.each = function(fn){each(this,fn);return this}
-dom.on = function(ev, fn){var evt = this.evh.bindEv(ev, fn, this)}
-dom.off = function(ev){var evt = this.evh.unbindEv(ev, this)}
-dom.val = function(v){return (v!==undefined?this.value=v:this.value)}
-dom.append = function(html){this.innerHTML = this.innerHTML + html}
-dom.prepend = function(html){this.innerHTML = html + this.innerHTML}
-dom.html = function(html){
-	return html===void 0? this[0].innerHTML : this.each(function(el){log(el)
-		el.innerHTML=html
-	})
-}
-dom.evh = {
-	evs: [],
-	bindEv: function(ev, fn, te) {
-		this.unbindEv(ev, te);
-		te.addEventListener(ev, fn, false);
-		this.evs.push({
-			type: ev,
-			ev: fn,
-			target: te
-		});
-	},
-	findEv: function(ev){
-		return this.evs.filter(function(evt) {
-			return (evt.type === ev);
-		}, ev)[0];
-	},
-	unbindEv: function(ev, te) {
-		var evn = this.findEv(ev);
-		if (evn !== undefined) {
-
-			te.removeEventListener(ev, evn.ev, false);
-		}
-		this.evs = this.evs.filter(function(evt){
-			return (evt.type !== ev);
-		}, ev);
-	}
-};
+},	dom = Dom.prototype;
 S=function(sel,doc){return new Dom(sel,doc)}
 
-log(S('div'));
+dom.each  = function(fn){each(this,fn); return this}
+dom.append= function(doc){this.each(function(el){append(el, doc)}); return this}
+dom.insert= function(doc, pos){this.each(function(el){insert(el, doc, pos)}); return this}
+dom.on    = function(ev, fn){this.each(function(el){ on(el,ev,fn)}); return this}
+dom.off   = function(ev, fn){this.each(function(el){off(el,ev,fn)}); return this}
+dom.tag   = function(tg, at, ht){this.each(function(el){append(el, tag(tg, at, ht))}); return this}
+dom.css   = function(pro, val){this.each(function(el){val!==void 0 ? el.style[pro]=val : el.style=pro}); return this}
+dom.attr  = function(att, val){if(val===void 0) return this[0].getAttribute(att); attr(this, att, val); return this}
+dom.val   = function(val){if(val===void 0)return this[0].value;this.each(function(el){el.value=val}); return this}
+dom.html  = function(htm){if(htm===void 0)return this[0].innerHTML;this.each(function(el){el.innerHTML=htm}); return this}
+dom.addClass = function(cName){this.each(function(el){addClass(el, cName)}); return this}
+dom.removeClass = function(cName){this.each(function(el){removeClass(el, cName)}); return this}
+dom.toggleClass = function(cName){this.each(function(el){toggleClass(el, cName)}); return this}
 
-S('div').html('shamim');
+function myFunction() {
+	S("li").html(Math.random());
+}
+
+S("#btn1").on('click',function(){
+	S().on('mousemove', myFunction);
+	S("input").val('inputinputinput');
+});
+S("#btn2").on('click',function(){
+	S().off('mousemove', myFunction);
+	S("li").html(Math.random());
+	log(S("input").val());
+});
+
+S("div").addClass('addClass');
+S("div").addClass('addClass2');
+S("div").removeClass('addClass2');
+S("div").toggleClass('toggleClass');
+S("li").tag('div', ['id=ss'], 'sssssssssssss');
+
+//log(S('div').append('<h1>','this is h1'));
 
 /*
+S('div').html('shamim');
+
 document.getElementById('content').appendChild(a.els);
 a.html('This div was created with the selector and this content was added with .html()');
 S('#content').append('The value of #test is' + S('#test').val() + ' change the value to see thee bound event.');
