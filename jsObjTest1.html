@@ -18,9 +18,9 @@
 <button id="btn2">Append list item</button>
 
 <script type="text/javascript">
-function log(v){console.log(v)}
-function len(arr){return Array.isArray(arr) ? arr.length : Object.keys(arr).length}
-function isSet(v){return typeof v !== 'undefined'}
+function log(arg){console.log(arg)}
+function len(arg){return Array.isArray(arg) ? arg.length : Object.keys(arg).length}
+function isSet(arg){return typeof arg !== 'undefined'}
 function isArr(arr){return arr && Array.isArray(arr)}
 function isStr(str){return str && typeof(str)==='string'||str instanceof String}
 function isObj(obj){return obj && typeof obj==='object' && obj.constructor===Object}
@@ -35,11 +35,13 @@ function selAll(sel, doc){return isList(sel) ? sel : (doc||document)['querySelec
 function selOne(sel, doc){return  isElm(sel) ? sel : (doc||document)['querySelector'](sel)}
 
 /*pos=beforebegin/afterbegin/beforeend/afterend*/
-function insert(el, doc, pos){el.insertAdjacentHTML(pos||'beforeend',doc)}
-function append(el, doc){isElm(doc)?el.appendChild(doc):el.innerHTML=el.innerHTML+doc}
-function on(el, ev, fn){el.addEventListener?el.addEventListener(ev,fn,false):el.attachEvent?el.attachEvent("on"+ev,fn):el["on"+ev]=fn}
-function off(el, ev, fn){
-	el.removeEventListener?el.removeEventListener(ev,fn,false):el.detachEvent?el.detachEvent("on"+ev,fn):el["on"+ev]=null;
+function insert(elm, doc, pos){elm.insertAdjacentHTML(pos||'beforeend',doc)}
+function append(elm, doc){isElm(doc) ? elm.appendChild(doc) : elm.innerHTML=elm.innerHTML+doc}
+function on(elm, ev, fn){
+	elm.addEventListener ? elm.addEventListener(ev,fn,false) : elm.attachEvent ? elm.attachEvent("on"+ev,fn) : elm["on"+ev]=fn;
+}
+function off(elm, ev, fn){
+	elm.removeEventListener ? elm.removeEventListener(ev,fn,false) : elm.detachEvent ? elm.detachEvent("on"+ev,fn) : elm["on"+ev]=null;
 }
 function each(arr, fn){for(var i=0,l=arr.length; i<l; i++) if(fn.call(i, arr[i])===false)break}
 function tag(tag, att, htm){
@@ -132,9 +134,10 @@ S("#btn2").on('click',function(){
 	log(S("input").val());
 });
 
-S("div").addClass('addClass');
-S("div").addClass('addClass2');
-S("div").removeClass('addClass2');
+S("div").addClass('ssssssssss');
+S("div").addClass('bbbbbbbbbbb');
+S("div").removeClass('ssssssssss');
+S("div").toggleClass('toggleClass');
 S("div").toggleClass('toggleClass');
 S("li").tag('div', ['id=ss'], 'sssssssssssss');
 
