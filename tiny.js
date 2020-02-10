@@ -4,11 +4,11 @@ function findAll(sel,doc){return islist(sel)? sel : (doc||document)['querySelect
 
 function log(arg){console.log(arg)}
 function len(arg){return isstr(arg)||Array.isArray(arg) ? arg.length : Object.keys(arg).length}
-function isset(arg){return typeof arg !== 'undefined'}
+function isset(arg){return typeof(arg) !== 'undefined'}
 function isarr(arr){return arr && Array.isArray(arr)}
 function isstr(str){return str && typeof(str)==='string'||str instanceof String}
 function str(v){return v!=='undefined' ? v.outerHTML : v.toString()}
-function isobj(obj){return obj && typeof obj==='object' && obj.constructor===Object}
+function isobj(obj){return obj && Object.keys(obj).length>0 && typeof(obj)==='object' && obj.constructor===Object}
 function iselm(elm){return elm instanceof Element||elm instanceof HTMLDocument}
 function islist(elm){return NodeList.prototype.isPrototypeOf(elm)}
 function ishtml(str){return /<[a-z/][\s\S]*>/i.test(str)}
@@ -101,7 +101,7 @@ function http(){
 		data  : null,
 		func  : function(r){log(r)},
 		error : function(x){log(x.responseText)},
-		async : !0,
+		async : true,
 		dataType : DT.text,
 		contentType : 'application/x-www-form-urlencoded; charset=UTF-8'
 	};
@@ -119,7 +119,7 @@ function http(){
 function merge(obj1, obj2){loop(obj2, function(k, v){ obj1[k] = v }); return obj1}
 function addprm(){qp=merge(qp,arr2obj(arguments)); return url.turl+'?'+obj2str(qp)}
 function extract(data, where){for(var key in data) where[key]=data[key]}
-function dbRows(u, col){var rs;if(col!==void 0)u+='&col='+col;http({url:u, async: false, func:function(r){rs=r;}});return rs;}
+function dbrows(u, col){var rs;if(col!==void 0)u+='&col='+col;http({url:u, async: false, func:function(r){rs=r;}});return rs;}
 function pagination(total, dbtns){
 	page  = isset(qp.page)  ? Number(qp.page) : page;
 	limit = isset(qp.limit) ? Number(qp.limit): limit;
